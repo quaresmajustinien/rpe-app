@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#185FA5">
+<title>RPE Coach — Athlète</title>
+<style>
+:root {
+  --blue: #185FA5; --blue-light: #E6F1FB; --blue-dark: #0C447C;
+  --green: #3B6D11; --green-light: #EAF3DE;
+  --orange: #633806; --orange-light: #FAEEDA;
+  --red: #791F1F; --red-light: #FCEBEB;
+  --text: #1a1a1a; --text-2: #555; --text-3: #999;
+  --border: #e0e0e0; --bg: #f5f5f5; --white: #fff;
+  --radius: 12px; --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+.page { display: none; min-height: 100vh; flex-direction: column; }
+.page.on { display: flex; }
+
+/* TOPBAR */
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 14px 16px 10px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
+.topbar-title { font-size: 16px; font-weight: 600; flex: 1; }
+.topbar-sub { font-size: 12px; color: var(--text-2); }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--blue-light); color: var(--blue-dark); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; cursor: pointer; }
+.back-btn { font-size: 22px; color: var(--text-2); cursor: pointer; padding: 0 4px; background: none; border: none; }
+
+/* BODY */
+.body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+/* CARDS */
+.card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.card-header { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+.card-body { padding: 12px 14px; }
+.card-title { font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* SESSION ITEM */
+.session-item { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); cursor: pointer; gap: 10px; }
+.session-item:last-child { border-bottom: none; }
+.session-item:active { background: var(--bg); }
+.session-info { flex: 1; }
+.session-name { font-size: 14px; font-weight: 500; }
+.session-meta { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+.badge-warn { background: var(--orange-light); color: var(--orange); }
+.badge-muted { background: var(--bg); color: var(--text-3); border: 1px solid var(--border); }
+.badge-green { background: var(--green-light); color: var(--green); }
+
+/* EMPTY */
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px; gap: 12px; }
+.empty-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--green-light); display: flex; align-items: center; justify-content: center; font-size: 30px; }
+.empty h3 { font-size: 17px; font-weight: 600; }
+.empty p { font-size: 14px; color: var(--text-2); line-height: 1.5; max-width: 280px; }
+
+/* DURATION */
+.dur-display { font-size: 52px; font-weight: 600; text-align: center; color: var(--text); }
+.dur-sub { font-size: 13px; color: var(--text-2); text-align: center; margin-bottom: 8px; }
+.dur-slider { width: 100%; accent-color: var(--blue); height: 6px; margin: 8px 0; }
+.dur-quick { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.dur-chip { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--white); font-size: 13px; cursor: pointer; font-family: inherit; }
+.dur-chip:active { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+
+/* RPE ZONE */
+.rpe-zone { border-radius: var(--radius); padding: 16px; transition: background 0.35s, color 0.35s; }
+.rpe-score { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.rpe-num { font-size: 52px; font-weight: 700; transition: color 0.35s; }
+.rpe-lbl { font-size: 16px; font-weight: 600; transition: color 0.35s; }
+.rpe-slider { width: 100%; margin: 6px 0 4px; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.4); outline: none; cursor: pointer; }
+.rpe-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 2px solid rgba(0,0,0,0.15); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.rpe-ticks { display: flex; justify-content: space-between; font-size: 9px; opacity: 0.65; padding: 0 2px; margin-bottom: 12px; }
+.indic-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.indic-card { background: rgba(255,255,255,0.2); border-radius: 8px; padding: 9px 10px; backdrop-filter: blur(4px); }
+.indic-title { font-size: 10px; font-weight: 600; margin-bottom: 3px; opacity: 0.9; }
+.indic-val { font-size: 11px; line-height: 1.3; margin-bottom: 5px; }
+.indic-dots { display: flex; gap: 4px; }
+.dot-f { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.9); }
+.dot-e { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.25); }
+.charge-info { font-size: 12px; color: var(--text-2); text-align: center; padding: 6px 0; }
+
+/* COMMENT */
+.comment-area { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 14px; font-family: inherit; color: var(--text); background: var(--white); resize: none; min-height: 100px; }
+.comment-area:focus { outline: none; border-color: var(--blue); }
+.tag-wrap { display: flex; gap: 7px; flex-wrap: wrap; }
+.tag { font-size: 12px; padding: 5px 11px; border-radius: 20px; border: 1px solid var(--border); background: var(--white); cursor: pointer; font-family: inherit; color: var(--text-2); transition: all 0.15s; }
+.tag.selected { background: var(--blue-light); color: var(--blue); border-color: var(--blue); }
+.tag:active { background: var(--blue-light); }
+
+/* CONFIRM */
+.confirm-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 20px; gap: 14px; text-align: center; }
+.confirm-icon { width: 70px; height: 70px; border-radius: 50%; background: var(--green-light); display: flex; align-items: center; justify-content: center; font-size: 34px; }
+.confirm-title { font-size: 20px; font-weight: 700; }
+.confirm-sub { font-size: 14px; color: var(--text-2); line-height: 1.5; max-width: 280px; }
+.recap-card { width: 100%; max-width: 360px; background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.recap-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+.recap-row:last-child { border-bottom: none; }
+.recap-label { color: var(--text-2); }
+.recap-val { font-weight: 600; }
+.export-note { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+
+/* BOTTOM BTN */
+.bottom-btn-wrap { padding: 12px 16px 24px; }
+.btn-primary { width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--blue); color: #fff; border: none; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-primary:active { background: var(--blue-dark); }
+.btn-primary:disabled { background: var(--border); color: var(--text-3); cursor: default; }
+.btn-ghost { width: 100%; padding: 10px; border: none; background: none; color: var(--text-2); font-size: 14px; cursor: pointer; font-family: inherit; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 : ACCUEIL -->
+<div id="p-home" class="page on">
+  <div class="topbar">
+    <div style="flex:1">
+      <div class="topbar-title" id="home-greeting">Bonjour</div>
+      <div class="topbar-sub" id="home-date"></div>
+    </div>
+    <div class="avatar" id="home-avatar" onclick="logout()" title="Déconnexion">?</div>
+  </div>
+  <div class="body">
+    <div class="card-title" style="padding:0 2px">Séances à évaluer</div>
+    <div class="card" id="pending-list">
+      <div class="empty" style="padding:32px 20px">
+        <div style="font-size:28px">⏳</div>
+        <p style="font-size:13px;color:var(--text-3)">Chargement…</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2 : DURÉE -->
+<div id="p-duration" class="page">
+  <div class="topbar">
+    <button class="back-btn" onclick="goPage('p-home')">‹</button>
+    <div>
+      <div class="topbar-title" id="dur-session-name">Séance</div>
+      <div class="topbar-sub" id="dur-session-meta"></div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="card card-body" style="font-size:14px;color:var(--text-2);line-height:1.6">
+      Combien de temps a duré ta séance ? Cette donnée est utilisée pour calculer ta charge d'entraînement.
+    </div>
+    <div class="card" style="padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px">
+      <div class="dur-display" id="dur-val">60</div>
+      <div class="dur-sub">minutes</div>
+      <input type="range" class="dur-slider" min="15" max="180" step="5" value="60" id="dur-slider" oninput="onDurChange(this.value)">
+      <div class="dur-quick">
+        <button class="dur-chip" onclick="setDur(30)">30 min</button>
+        <button class="dur-chip" onclick="setDur(45)">45 min</button>
+        <button class="dur-chip" onclick="setDur(60)">60 min</button>
+        <button class="dur-chip" onclick="setDur(75)">75 min</button>
+        <button class="dur-chip" onclick="setDur(90)">90 min</button>
+        <button class="dur-chip" onclick="setDur(120)">2h</button>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-btn-wrap">
+    <button class="btn-primary" onclick="goPage('p-rpe')">Valider →</button>
+  </div>
+</div>
+
+<!-- PAGE 3 : RPE -->
+<div id="p-rpe" class="page">
+  <div class="topbar">
+    <button class="back-btn" onclick="goPage('p-duration')">‹</button>
+    <div>
+      <div class="topbar-title">Intensité ressentie</div>
+      <div class="topbar-sub" id="rpe-session-meta"></div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="rpe-zone" id="rpe-zone">
+      <div class="rpe-score">
+        <div class="rpe-num" id="rpe-num">6</div>
+        <div class="rpe-lbl" id="rpe-lbl">Très léger</div>
+      </div>
+      <input type="range" class="rpe-slider" min="6" max="20" step="1" value="6" id="rpe-slider" oninput="onRpeChange(this.value)">
+      <div class="rpe-ticks">
+        <span>6</span><span>8</span><span>10</span><span>12</span><span>14</span><span>16</span><span>18</span><span>20</span>
+      </div>
+      <div class="indic-grid" id="indic-grid"></div>
+    </div>
+    <div class="charge-info">Charge estimée : <strong id="charge-val">—</strong></div>
+  </div>
+  <div class="bottom-btn-wrap">
+    <button class="btn-primary" onclick="goPage('p-comment')">Valider mon RPE →</button>
+  </div>
+</div>
+
+<!-- PAGE 4 : COMMENTAIRE -->
+<div id="p-comment" class="page">
+  <div class="topbar">
+    <button class="back-btn" onclick="goPage('p-rpe')">‹</button>
+    <div>
+      <div class="topbar-title">Commentaire</div>
+      <div class="topbar-sub">Facultatif</div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="card card-body" style="font-size:14px;color:var(--text-2);line-height:1.6">
+      Ajoute un retour sur ta séance : douleurs, fatigue, moral, qualité du sommeil…
+    </div>
+    <textarea class="comment-area" id="comment-ta" placeholder="Ex : légère tension à l'ischio gauche, bonne énergie globalement."></textarea>
+    <div class="tag-wrap" id="tag-wrap">
+      <button class="tag" onclick="toggleTag(this,'Bonne récup')">Bonne récup</button>
+      <button class="tag" onclick="toggleTag(this,'Fatigue musculaire')">Fatigue musculaire</button>
+      <button class="tag" onclick="toggleTag(this,'Douleur')">Douleur</button>
+      <button class="tag" onclick="toggleTag(this,'Manque de sommeil')">Manque de sommeil</button>
+      <button class="tag" onclick="toggleTag(this,'Top motivation')">Top motivation</button>
+      <button class="tag" onclick="toggleTag(this,'Stress')">Stress</button>
+    </div>
+  </div>
+  <div class="bottom-btn-wrap">
+    <button class="btn-primary" onclick="submitRpe()">Envoyer à mon coach →</button>
+    <button class="btn-ghost" onclick="skipComment()">Passer sans commentaire</button>
+  </div>
+</div>
+
+<!-- PAGE 5 : CONFIRMATION -->
+<div id="p-confirm" class="page">
+  <div class="confirm-body">
+    <div class="confirm-icon">✅</div>
+    <div class="confirm-title" id="confirm-title">Merci !</div>
+    <div class="confirm-sub">Ton retour a été transmis à ton coach.</div>
+    <div class="recap-card">
+      <div class="recap-row"><span class="recap-label">Séance</span><span class="recap-val" id="recap-session">—</span></div>
+      <div class="recap-row"><span class="recap-label">Durée</span><span class="recap-val" id="recap-dur">—</span></div>
+      <div class="recap-row"><span class="recap-label">RPE</span><span class="recap-val" id="recap-rpe">—</span></div>
+      <div class="recap-row"><span class="recap-label">Durée (Excel)</span><span class="recap-val" id="recap-dur-h">—</span></div>
+    </div>
+    <div class="export-note">📊 Données exportées vers Excel automatiquement</div>
+    <button class="btn-primary" style="max-width:300px" onclick="afterConfirm()">Voir mes séances</button>
+  </div>
+</div>
+
+<script>
+const API = '';
+let token = localStorage.getItem('token');
+let user = JSON.parse(localStorage.getItem('user') || 'null');
+let pendingSessions = [];
+let currentSession = null;
+let currentDur = 60;
+let currentRpe = 6;
+
+if (!token || !user) window.location.href = '/';
+
+// ── RPE DATA ──────────────────────────────────────────────────────────────────
+const RPE = [
+  {v:6,  l:'Très léger',     bg:'#D4EDBC', th:'#1A4A04', ts:'#2E6B0A', sw:1,pa:1,br:1,hr:1},
+  {v:7,  l:'Léger',          bg:'#C5E5A5', th:'#1A4A04', ts:'#2E6B0A', sw:1,pa:1,br:1,hr:2},
+  {v:8,  l:'Modéré',         bg:'#B8DE8E', th:'#1A4A04', ts:'#3B6D11', sw:2,pa:1,br:2,hr:2},
+  {v:9,  l:'Un peu dur',     bg:'#F5E6A3', th:'#3D2600', ts:'#5A3800', sw:2,pa:2,br:2,hr:2},
+  {v:10, l:'Dur',            bg:'#F5D67A', th:'#3D2600', ts:'#5A3800', sw:3,pa:2,br:3,hr:3},
+  {v:11, l:'Dur',            bg:'#F2C14E', th:'#3D2600', ts:'#5A3800', sw:3,pa:2,br:3,hr:3},
+  {v:12, l:'Assez difficile',bg:'#EF9F27', th:'#3D2600', ts:'#5A3800', sw:3,pa:3,br:3,hr:3},
+  {v:13, l:'Assez difficile',bg:'#E07820', th:'#fff',    ts:'#FFE5CC', sw:4,pa:3,br:4,hr:4},
+  {v:14, l:'Difficile',      bg:'#D85A30', th:'#fff',    ts:'#FFE5CC', sw:4,pa:3,br:4,hr:4},
+  {v:15, l:'Très difficile', bg:'#C43E1C', th:'#fff',    ts:'#FFDDD0', sw:4,pa:4,br:4,hr:4},
+  {v:16, l:'Très difficile', bg:'#A83010', th:'#fff',    ts:'#FFDDD0', sw:5,pa:4,br:5,hr:5},
+  {v:17, l:'Sévère',         bg:'#8B2010', th:'#fff',    ts:'#FFCDC5', sw:5,pa:5,br:5,hr:5},
+  {v:18, l:'Très sévère',    bg:'#6E1010', th:'#fff',    ts:'#FFCDC5', sw:5,pa:5,br:5,hr:5},
+  {v:19, l:'Extrême',        bg:'#550A0A', th:'#fff',    ts:'#FFB8B8', sw:5,pa:5,br:5,hr:5},
+  {v:20, l:'Effort maximum', bg:'#3A0000', th:'#fff',    ts:'#FF9999', sw:5,pa:5,br:5,hr:5},
+];
+const INDICS = [
+  {k:'sw', icon:'💧', lb:'Sudation',      vals:['Sèche','Légère','Modérée','Abondante','Excessive']},
+  {k:'pa', icon:'🔥', lb:'Douleur musc.', vals:['Aucune','Légère','Modérée','Forte','Intense']},
+  {k:'br', icon:'🫁', lb:'Respiration',   vals:['Normale','Légèrement accél.','Accélérée','Difficile','Haletante']},
+  {k:'hr', icon:'❤️', lb:'Fréq. cardiaque',vals:['Basse','Modérée','Élevée','Très élevée','Maximale']},
+];
+
+function getRpe(v) { return RPE.find(d => d.v === parseInt(v)) || RPE[0]; }
+function dots(n) {
+  let s = '<div class="indic-dots">';
+  for (let i = 0; i < 5; i++) s += `<div class="${i < n ? 'dot-f' : 'dot-e'}"></div>`;
+  return s + '</div>';
+}
+
+function onRpeChange(v) {
+  currentRpe = parseInt(v);
+  const d = getRpe(v);
+  const zone = document.getElementById('rpe-zone');
+  zone.style.background = d.bg;
+  zone.style.color = d.th;
+  document.getElementById('rpe-num').textContent = v;
+  document.getElementById('rpe-num').style.color = d.th;
+  document.getElementById('rpe-lbl').textContent = d.l;
+  document.getElementById('rpe-lbl').style.color = d.ts;
+  const durH = currentDur / 60;
+  document.getElementById('charge-val').textContent = (currentRpe * durH).toFixed(1) + ' UA';
+  document.getElementById('indic-grid').innerHTML = INDICS.map(ind => {
+    const lvl = d[ind.k];
+    return `<div class="indic-card">
+      <div class="indic-title">${ind.icon} ${ind.lb}</div>
+      <div class="indic-val" style="color:${d.ts}">${ind.vals[lvl-1]}</div>
+      ${dots(lvl)}
+    </div>`;
+  }).join('');
+}
+
+function onDurChange(v) {
+  currentDur = parseInt(v);
+  document.getElementById('dur-val').textContent = v;
+  const durH = currentDur / 60;
+  document.getElementById('charge-val').textContent = (currentRpe * durH).toFixed(1) + ' UA';
+}
+
+function setDur(v) {
+  currentDur = v;
+  document.getElementById('dur-slider').value = v;
+  document.getElementById('dur-val').textContent = v;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  window.scrollTo(0, 0);
+  if (id === 'p-rpe') {
+    document.getElementById('rpe-session-meta').textContent = `${currentSession?.name} · ${currentDur} min`;
+    onRpeChange(currentRpe);
+  }
+}
+
+function selectSession(session) {
+  currentSession = session;
+  document.getElementById('dur-session-name').textContent = session.name;
+  document.getElementById('dur-session-meta').textContent = `${session.date} · ${session.time}`;
+  currentDur = 60;
+  currentRpe = 6;
+  document.getElementById('dur-slider').value = 60;
+  document.getElementById('dur-val').textContent = 60;
+  document.getElementById('rpe-slider').value = 6;
+  document.getElementById('comment-ta').value = '';
+  document.querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
+  onRpeChange(6);
+  goPage('p-duration');
+}
+
+// ── TAGS ──────────────────────────────────────────────────────────────────────
+function toggleTag(el, text) {
+  el.classList.toggle('selected');
+  updateCommentFromTags();
+}
+function updateCommentFromTags() {
+  const selected = [...document.querySelectorAll('.tag.selected')].map(t => t.textContent);
+  const manual = document.getElementById('comment-ta').value.replace(/^(Bonne récup|Fatigue musculaire|Douleur|Manque de sommeil|Top motivation|Stress)(,\s*)?/g, '').trim();
+  let val = selected.join(', ');
+  if (manual) val = val ? val + ' — ' + manual : manual;
+  document.getElementById('comment-ta').value = val;
+}
+
+// ── SUBMIT ────────────────────────────────────────────────────────────────────
+async function submitRpe(skipCom = false) {
+  const comment = skipCom ? '' : document.getElementById('comment-ta').value;
+  const durH = Math.round((currentDur / 60) * 100) / 100;
+  try {
+    const r = await fetch('/api/responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ sessionId: currentSession.id, durationMin: currentDur, rpe: currentRpe, comment })
+    });
+    const data = await r.json();
+    if (!r.ok) { alert(data.error); return; }
+    document.getElementById('confirm-title').textContent = `Merci ${user.name.split(' ')[0]} !`;
+    document.getElementById('recap-session').textContent = currentSession.name;
+    document.getElementById('recap-dur').textContent = currentDur + ' min';
+    document.getElementById('recap-rpe').textContent = currentRpe + ' / 20';
+    document.getElementById('recap-dur-h').textContent = durH + ' h';
+    goPage('p-confirm');
+  } catch(e) { alert('Erreur réseau, réessaie.'); }
+}
+
+function skipComment() { submitRpe(true); }
+
+function afterConfirm() {
+  loadPending();
+  goPage('p-home');
+}
+
+// ── LOAD PENDING ──────────────────────────────────────────────────────────────
+async function loadPending() {
+  try {
+    const r = await fetch('/api/my-pending', { headers: { 'Authorization': 'Bearer ' + token } });
+    const sessions = await r.json();
+    pendingSessions = sessions;
+    renderPending(sessions);
+  } catch(e) {
+    document.getElementById('pending-list').innerHTML = '<div class="empty"><p>Impossible de charger les séances.</p></div>';
+  }
+}
+
+function renderPending(sessions) {
+  const el = document.getElementById('pending-list');
+  if (!sessions.length) {
+    el.innerHTML = `<div class="empty">
+      <div class="empty-icon">✅</div>
+      <h3>Tout est à jour !</h3>
+      <p>Aucune séance à évaluer pour le moment. Tu recevras une notification après ta prochaine séance.</p>
+    </div>`;
+    return;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  el.innerHTML = sessions.map(s => {
+    const isToday = s.date === today;
+    const badge = isToday
+      ? `<span class="badge badge-warn">Aujourd'hui</span>`
+      : `<span class="badge badge-muted">Non évaluée</span>`;
+    return `<div class="session-item" onclick="selectSession(${JSON.stringify(s).replace(/"/g, '&quot;')})">
+      <div class="session-info">
+        <div class="session-name">${s.name}</div>
+        <div class="session-meta">${s.date} · ${s.time} · ${s.duration} min prévues</div>
+      </div>
+      ${badge}
+      <span style="font-size:20px;color:var(--text-3)">›</span>
+    </div>`;
+  }).join('');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function init() {
+  const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  document.getElementById('home-avatar').textContent = initials;
+  document.getElementById('home-greeting').textContent = 'Bonjour ' + user.name.split(' ')[0];
+  const now = new Date();
+  document.getElementById('home-date').textContent = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  onRpeChange(6);
+  loadPending();
+}
+
+function logout() {
+  if (confirm('Se déconnecter ?')) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

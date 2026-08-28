@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#185FA5">
+<title>RPE Coach — Admin</title>
+<style>
+:root {
+  --blue: #185FA5; --blue-light: #E6F1FB; --blue-dark: #0C447C;
+  --green: #3B6D11; --green-light: #EAF3DE;
+  --orange: #633806; --orange-light: #FAEEDA;
+  --red: #791F1F; --red-light: #FCEBEB;
+  --text: #1a1a1a; --text-2: #555; --text-3: #999;
+  --border: #e0e0e0; --bg: #f5f5f5; --white: #fff;
+  --radius: 12px; --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 70px; }
+
+/* TABS */
+.tabs { display: flex; background: var(--white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 20; }
+.tab { flex: 1; padding: 14px 4px; font-size: 12px; font-weight: 500; text-align: center; color: var(--text-3); cursor: pointer; border-bottom: 2px solid transparent; }
+.tab.on { color: var(--blue); border-bottom-color: var(--blue); }
+
+/* TOPBAR */
+.topbar { background: var(--white); padding: 14px 16px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.topbar-title { font-size: 17px; font-weight: 700; }
+.topbar-sub { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+.admin-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; background: var(--blue-light); color: var(--blue-dark); font-weight: 600; }
+
+/* PAGE */
+.page { display: none; padding: 16px; flex-direction: column; gap: 14px; }
+.page.on { display: flex; }
+
+/* CARDS */
+.card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.card-header { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.06em; }
+.card-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+
+/* SESSION CARD */
+.session-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.session-card-head { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+.session-card-name { font-size: 15px; font-weight: 600; }
+.session-card-meta { font-size: 12px; color: var(--text-2); margin-top: 3px; }
+.session-card-stats { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.session-card-actions { padding: 10px 14px; display: flex; gap: 8px; }
+.remind-btn { flex: 1; padding: 9px 6px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.remind-btn:active { background: var(--bg); }
+.remind-btn.sent { background: var(--green-light); color: var(--green); border-color: #a8d878; cursor: default; }
+.remind-btn.sending { opacity: 0.6; cursor: wait; }
+
+/* BADGE */
+.badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+.badge-blue { background: var(--blue-light); color: var(--blue-dark); }
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-warn { background: var(--orange-light); color: var(--orange); }
+.badge-muted { background: var(--bg); color: var(--text-3); border: 1px solid var(--border); }
+.badge-red { background: var(--red-light); color: var(--red); }
+
+/* FORM */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.field input, .field select { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; color: var(--text); background: var(--white); }
+.field input:focus, .field select:focus { outline: none; border-color: var(--blue); }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.btn-primary { width: 100%; padding: 13px; border-radius: var(--radius-sm); background: var(--blue); color: #fff; border: none; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-primary:active { background: var(--blue-dark); }
+
+/* REMINDER OPTIONS */
+.reminder-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+.rem-opt { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--white); font-size: 13px; cursor: pointer; font-family: inherit; }
+.rem-opt.on { background: var(--blue-light); color: var(--blue); border-color: var(--blue); font-weight: 500; }
+
+/* RESULTS */
+.athlete-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.athlete-row:last-child { border-bottom: none; }
+.av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.av-blue { background: var(--blue-light); color: var(--blue-dark); }
+.av-muted { background: var(--bg); color: var(--text-3); }
+.av-red { background: var(--red-light); color: var(--red); }
+.av-orange { background: var(--orange-light); color: var(--orange); }
+.av-green { background: var(--green-light); color: var(--green); }
+
+/* STATS GRID */
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.stat-box { background: var(--bg); border-radius: var(--radius-sm); padding: 12px; }
+.stat-label { font-size: 11px; color: var(--text-2); margin-bottom: 4px; }
+.stat-val { font-size: 24px; font-weight: 700; }
+
+/* MAPPING */
+.mapping-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.mapping-row:last-child { border-bottom: none; }
+.mapping-label { flex: 1; font-size: 14px; }
+.mapping-input { width: 60px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; text-align: center; text-transform: uppercase; }
+.mapping-input:focus { outline: none; border-color: var(--blue); }
+
+/* EXPORT BTN */
+.export-btn { width: 100%; padding: 13px; border-radius: var(--radius-sm); background: var(--green); color: #fff; border: none; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.export-btn:active { background: var(--green); opacity: 0.85; }
+
+.back-btn { font-size: 22px; color: var(--text-2); cursor: pointer; background: none; border: none; padding: 0 4px; }
+.section-sep { height: 1px; background: var(--border); margin: 4px 0; }
+.info-box { background: var(--blue-light); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; color: var(--blue-dark); line-height: 1.5; }
+.success-msg { background: var(--green-light); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; color: var(--green); display: none; }
+.success-msg.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-title">⚡ RPE Coach</div>
+    <div class="topbar-sub" id="admin-name">Administrateur</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="badge badge-blue">Admin</span>
+    <span style="font-size:13px;color:var(--text-3);cursor:pointer" onclick="logout()">Déco.</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="goTab(0)">📋 Séances</div>
+  <div class="tab" onclick="goTab(1)">➕ Créer</div>
+  <div class="tab" onclick="goTab(2)">📊 Résultats</div>
+  <div class="tab" onclick="goTab(3)">📊 Export</div>
+</div>
+
+<!-- TAB 0 : SÉANCES -->
+<div id="tab-0" class="page on">
+  <div id="sessions-list">
+    <div style="text-align:center;padding:32px;color:var(--text-3);font-size:14px">Chargement…</div>
+  </div>
+</div>
+
+<!-- TAB 1 : CRÉER -->
+<div id="tab-1" class="page">
+  <div class="card card-body">
+    <div class="field">
+      <label>Nom de la séance</label>
+      <input type="text" id="new-name" placeholder="Ex : Force max, Endurance, Vitesse…">
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="new-date">
+      </div>
+      <div class="field">
+        <label>Heure de début</label>
+        <input type="time" id="new-time" value="18:00">
+      </div>
+    </div>
+    <div class="field">
+      <label>Durée prévue (min)</label>
+      <input type="number" id="new-duration" placeholder="60" value="60" min="15" max="300">
+    </div>
+    <div class="field">
+      <label>Rappel d'évaluation</label>
+      <div class="reminder-opts">
+        <button class="rem-opt on" id="rem-30" onclick="selectRem(30)">30 min après</button>
+        <button class="rem-opt" id="rem-60" onclick="selectRem(60)">1h après</button>
+        <button class="rem-opt" id="rem-0" onclick="selectRem(0)">Manuel</button>
+      </div>
+    </div>
+    <div class="success-msg" id="create-success">✅ Séance créée avec succès !</div>
+    <button class="btn-primary" onclick="createSession()">Créer la séance</button>
+  </div>
+</div>
+
+<!-- TAB 2 : RÉSULTATS -->
+<div id="tab-2" class="page">
+  <div class="field">
+    <label>Choisir une séance</label>
+    <select id="result-select" onchange="loadResults()">
+      <option value="">— Sélectionner —</option>
+    </select>
+  </div>
+  <div id="results-content">
+    <div style="text-align:center;padding:32px;color:var(--text-3);font-size:14px">Sélectionnez une séance</div>
+  </div>
+</div>
+
+<!-- TAB 3 : EXPORT & MAPPING -->
+<div id="tab-3" class="page">
+  <div class="card">
+    <div class="card-header"><span class="card-title">Mapping des colonnes Excel</span></div>
+    <div class="card-body">
+      <div class="info-box">
+        Indiquez la <strong>lettre de colonne</strong> pour chaque donnée dans votre fichier Excel. Chaque onglet correspond à un athlète, chaque ligne à une séance (par ordre chronologique).
+      </div>
+      <div class="mapping-row">
+        <span class="mapping-label">📅 Date de la séance</span>
+        <input class="mapping-input" id="map-date" maxlength="2" placeholder="A">
+      </div>
+      <div class="mapping-row">
+        <span class="mapping-label">⏱ Durée (en heures)</span>
+        <input class="mapping-input" id="map-dur" maxlength="2" placeholder="B">
+      </div>
+      <div class="mapping-row">
+        <span class="mapping-label">💪 RPE (6–20)</span>
+        <input class="mapping-input" id="map-rpe" maxlength="2" placeholder="C">
+      </div>
+      <div class="mapping-row">
+        <span class="mapping-label">💬 Commentaire</span>
+        <input class="mapping-input" id="map-comment" maxlength="2" placeholder="D">
+      </div>
+      <div class="mapping-row">
+        <span class="mapping-label">Première ligne de données</span>
+        <input class="mapping-input" id="map-startrow" type="number" min="1" max="20" placeholder="2" style="width:70px">
+      </div>
+      <div class="success-msg" id="mapping-success">✅ Mapping sauvegardé !</div>
+      <button class="btn-primary" onclick="saveMapping()">Sauvegarder le mapping</button>
+    </div>
+  </div>
+  <div class="card card-body">
+    <div style="font-size:14px;color:var(--text-2);line-height:1.6">Téléchargez un fichier Excel avec un onglet par athlète. Les données sont insérées dans les colonnes configurées ci-dessus, triées par date.</div>
+    <button class="export-btn" onclick="doExport()">📥 Télécharger l'export Excel</button>
+  </div>
+</div>
+
+<script>
+const API = '';
+let token = localStorage.getItem('token');
+let user = JSON.parse(localStorage.getItem('user') || 'null');
+let sessions = [];
+let selectedRem = 30;
+
+if (!token || !user || user.role !== 'admin') window.location.href = '/';
+
+document.getElementById('admin-name').textContent = user.name;
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function goTab(n) {
+  document.querySelectorAll('.page').forEach((p, i) => { p.classList.toggle('on', i === n); });
+  document.querySelectorAll('.tab').forEach((t, i) => { t.classList.toggle('on', i === n); });
+  if (n === 0) loadSessions();
+  if (n === 2) { loadSessions(); populateResultSelect(); }
+  if (n === 3) loadMapping();
+}
+
+// ── SESSIONS ──────────────────────────────────────────────────────────────────
+async function loadSessions() {
+  try {
+    const r = await fetch('/api/sessions', { headers: { 'Authorization': 'Bearer ' + token } });
+    sessions = await r.json();
+    renderSessions(sessions);
+    populateResultSelect();
+  } catch(e) {}
+}
+
+function renderSessions(list) {
+  const el = document.getElementById('sessions-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-3);font-size:14px">Aucune séance. Créez-en une !</div>';
+    return;
+  }
+  el.innerHTML = list.map(s => {
+    const statusBadge = {
+      planned: '<span class="badge badge-blue">Prévue</span>',
+      active:  '<span class="badge badge-warn">En cours</span>',
+      done:    '<span class="badge badge-green">Terminée</span>',
+    }[s.status] || '<span class="badge badge-muted">?</span>';
+    return `<div class="session-card" style="margin-bottom:12px">
+      <div class="session-card-head">
+        <div>
+          <div class="session-card-name">${s.name}</div>
+          <div class="session-card-meta">${s.date} · ${s.time} · ${s.duration} min</div>
+        </div>
+        ${statusBadge}
+      </div>
+      <div class="session-card-stats">
+        <span style="font-size:13px;color:var(--text-2)">Rappel auto : <strong>${s.reminderDelay === 0 ? 'Manuel' : s.reminderDelay + ' min après'}</strong></span>
+        <span style="font-size:12px;color:var(--text-3)">ID: ${s.id.slice(0,8)}</span>
+      </div>
+      <div class="session-card-actions">
+        <button class="remind-btn" id="btn30-${s.id}" onclick="sendRemind('${s.id}', 30, this)">
+          🔔 Rappel dans 30 min
+        </button>
+        <button class="remind-btn" id="btnnow-${s.id}" onclick="sendRemind('${s.id}', 0, this)">
+          📲 Rappel immédiat
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function sendRemind(sessionId, delay, btn) {
+  if (btn.classList.contains('sent')) return;
+  btn.classList.add('sending');
+  btn.textContent = '⏳ Envoi…';
+  try {
+    const r = await fetch(`/api/sessions/${sessionId}/remind`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ delay })
+    });
+    const data = await r.json();
+    btn.classList.remove('sending');
+    btn.classList.add('sent');
+    btn.textContent = `✅ Envoyé à ${data.reminder.targetCount} athlète(s)`;
+    btn.disabled = true;
+  } catch(e) {
+    btn.classList.remove('sending');
+    btn.textContent = '❌ Erreur';
+  }
+}
+
+// ── CRÉER SÉANCE ──────────────────────────────────────────────────────────────
+function selectRem(v) {
+  selectedRem = v;
+  document.querySelectorAll('.rem-opt').forEach(b => b.classList.remove('on'));
+  document.getElementById(`rem-${v}`).classList.add('on');
+}
+
+async function createSession() {
+  const name = document.getElementById('new-name').value.trim();
+  const date = document.getElementById('new-date').value;
+  const time = document.getElementById('new-time').value;
+  const duration = document.getElementById('new-duration').value;
+  if (!name || !date || !time) { alert('Remplissez au moins le nom, la date et l\'heure.'); return; }
+  try {
+    const r = await fetch('/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ name, date, time, duration, reminderDelay: selectedRem })
+    });
+    if (!r.ok) { const d = await r.json(); alert(d.error); return; }
+    document.getElementById('new-name').value = '';
+    document.getElementById('new-date').value = '';
+    const suc = document.getElementById('create-success');
+    suc.classList.add('show');
+    setTimeout(() => suc.classList.remove('show'), 3000);
+    loadSessions();
+  } catch(e) { alert('Erreur réseau'); }
+}
+
+// ── RÉSULTATS ─────────────────────────────────────────────────────────────────
+function populateResultSelect() {
+  const sel = document.getElementById('result-select');
+  sel.innerHTML = '<option value="">— Sélectionner —</option>' +
+    sessions.map(s => `<option value="${s.id}">${s.name} · ${s.date}</option>`).join('');
+}
+
+async function loadResults() {
+  const id = document.getElementById('result-select').value;
+  const el = document.getElementById('results-content');
+  if (!id) { el.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-3);font-size:14px">Sélectionnez une séance</div>'; return; }
+  try {
+    const r = await fetch(`/api/sessions/${id}/results`, { headers: { 'Authorization': 'Bearer ' + token } });
+    const data = await r.json();
+    const avgRpeColor = data.avgRpe >= 15 ? '#c0392b' : data.avgRpe >= 12 ? '#e67e22' : '#27ae60';
+    el.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-label">RPE moyen</div><div class="stat-val" style="color:${avgRpeColor}">${data.avgRpe || '—'}</div></div>
+        <div class="stat-box"><div class="stat-label">Charge moy. (UA)</div><div class="stat-val" style="color:var(--blue)">${data.avgCharge || '—'}</div></div>
+        <div class="stat-box"><div class="stat-label">Réponses</div><div class="stat-val">${data.responses.length}</div></div>
+        <div class="stat-box"><div class="stat-label">En attente</div><div class="stat-val" style="color:var(--orange)">${data.pending.length}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Détail par athlète</span></div>
+        ${data.responses.map(resp => {
+          const rpeColor = resp.rpe >= 17 ? 'av-red' : resp.rpe >= 13 ? 'av-orange' : 'av-green';
+          const initials = resp.userName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+          return `<div class="athlete-row">
+            <div class="av ${rpeColor}">${initials}</div>
+            <div style="flex:1">
+              <div style="font-size:14px;font-weight:500">${resp.userName}</div>
+              <div style="font-size:12px;color:var(--text-2)">${resp.durationH}h · Charge : ${resp.charge.toFixed(1)} UA</div>
+              ${resp.comment ? `<div style="font-size:11px;color:var(--text-3);margin-top:2px">💬 ${resp.comment}</div>` : ''}
+            </div>
+            <span class="badge ${resp.rpe >= 17 ? 'badge-red' : resp.rpe >= 13 ? 'badge-warn' : 'badge-green'}">RPE ${resp.rpe}</span>
+          </div>`;
+        }).join('')}
+        ${data.pending.map(p => {
+          const initials = p.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+          return `<div class="athlete-row">
+            <div class="av av-muted">${initials}</div>
+            <div style="flex:1"><div style="font-size:14px;color:var(--text-3)">${p.name}</div></div>
+            <span class="badge badge-muted">En attente</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+  } catch(e) { el.innerHTML = '<div style="padding:20px;color:red;font-size:14px">Erreur de chargement</div>'; }
+}
+
+// ── MAPPING & EXPORT ──────────────────────────────────────────────────────────
+async function loadMapping() {
+  try {
+    const r = await fetch('/api/excel-mapping', { headers: { 'Authorization': 'Bearer ' + token } });
+    const m = await r.json();
+    if (m.dateCol) document.getElementById('map-date').value = m.dateCol;
+    if (m.durationCol) document.getElementById('map-dur').value = m.durationCol;
+    if (m.rpeCol) document.getElementById('map-rpe').value = m.rpeCol;
+    if (m.commentCol) document.getElementById('map-comment').value = m.commentCol;
+    if (m.startRow) document.getElementById('map-startrow').value = m.startRow;
+  } catch(e) {}
+}
+
+async function saveMapping() {
+  const mapping = {
+    dateCol:    document.getElementById('map-date').value.toUpperCase().trim() || null,
+    durationCol: document.getElementById('map-dur').value.toUpperCase().trim() || 'B',
+    rpeCol:     document.getElementById('map-rpe').value.toUpperCase().trim() || 'C',
+    commentCol: document.getElementById('map-comment').value.toUpperCase().trim() || null,
+    startRow:   parseInt(document.getElementById('map-startrow').value) || 2,
+  };
+  try {
+    await fetch('/api/excel-mapping', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ mapping })
+    });
+    const suc = document.getElementById('mapping-success');
+    suc.classList.add('show');
+    setTimeout(() => suc.classList.remove('show'), 3000);
+  } catch(e) { alert('Erreur sauvegarde'); }
+}
+
+async function doExport() {
+  window.location.href = '/api/export?token=' + token;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// Mettre la date d'aujourd'hui par défaut
+document.getElementById('new-date').value = new Date().toISOString().slice(0,10);
+
+function logout() {
+  if (confirm('Se déconnecter ?')) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/';
+  }
+}
+
+loadSessions();
+</script>
+</body>
+</html>

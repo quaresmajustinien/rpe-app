@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPE Coach — Setup Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#fff;border-radius:12px;padding:28px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,0.10)}
+h1{font-size:20px;font-weight:700;margin-bottom:6px}
+.sub{font-size:13px;color:#666;margin-bottom:20px;line-height:1.5}
+.field{margin-bottom:14px;display:flex;flex-direction:column;gap:5px}
+label{font-size:13px;font-weight:500;color:#444}
+input{padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit}
+input:focus{outline:none;border-color:#185FA5}
+.btn{width:100%;padding:12px;border-radius:8px;background:#185FA5;color:#fff;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:6px}
+.err{font-size:13px;color:#c0392b;background:#fdecea;padding:8px 12px;border-radius:8px;margin-bottom:10px;display:none}
+.err.show{display:block}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>⚡ Créer le compte admin</h1>
+  <p class="sub">Cette page est à usage unique pour créer le premier compte administrateur de l'application RPE Coach.</p>
+  <div class="err" id="err"></div>
+  <div class="field"><label>Votre nom complet</label><input id="name" placeholder="Jean Dupont"></div>
+  <div class="field"><label>Email</label><input type="email" id="email" placeholder="admin@monclub.fr"></div>
+  <div class="field"><label>Mot de passe</label><input type="password" id="password" placeholder="Minimum 8 caractères"></div>
+  <div class="field"><label>Clé de setup</label><input type="password" id="key" placeholder="RPE-ADMIN-SETUP"></div>
+  <button class="btn" onclick="setup()">Créer mon compte admin</button>
+</div>
+<script>
+async function setup() {
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const setupKey = document.getElementById('key').value;
+  const errEl = document.getElementById('err');
+  errEl.classList.remove('show');
+  try {
+    const r = await fetch('/api/setup-admin', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name, email, password, setupKey})
+    });
+    const data = await r.json();
+    if (!r.ok) { errEl.textContent = data.error; errEl.classList.add('show'); return; }
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    window.location.href = '/admin.html';
+  } catch(e) { errEl.textContent = 'Erreur de connexion'; errEl.classList.add('show'); }
+}
+</script>
+</body>
+</html>

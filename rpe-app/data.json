@@ -1,0 +1,15 @@
+{
+  "users": [
+    {
+      "id": "afe0c117-313d-4e9a-b8bc-095850249999",
+      "name": "Quaresma Justinien",
+      "email": "justinien.quaresma@gmail.com",
+      "password": "$2b$10$8iawl8X0whOBHZwXZm.Xyu8rDH8KG6bWU4Mj/t5y2OLn3PtV0d6um",
+      "role": "admin",
+      "createdAt": "2026-08-28T19:12:50.648Z"
+    }
+  ],
+  "sessions": [],
+  "responses": [],
+  "excelMapping": {}
+}
