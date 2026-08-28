@@ -182,8 +182,7 @@ app.post('/api/responses', auth, (req, res) => {
 app.get('/api/my-pending', auth, (req, res) => {
   const data = db.load();
   const responded = data.responses.filter(r => r.userId === req.user.id).map(r => r.sessionId);
-  const pending = data.sessions.filter(s => !responded.includes(s.id) && s.status !== 'planned');
-  res.json(pending);
+  const pending = data.sessions.filter(s => !responded.includes(s.id));
 });
 
 // Résultats d'une séance (admin)
