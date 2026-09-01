@@ -350,7 +350,8 @@ async function loadResults() {
   try {
     const r = await fetch(`/api/sessions/${id}/results`, { headers: { 'Authorization': 'Bearer ' + token } });
     const data = await r.json();
-    const avgRpeColor = data.avgRpe >= 15 ? '#c0392b' : data.avgRpe >= 12 ? '#e67e22' : '#27ae60';
+    if (!r.ok) { el.innerHTML = `<div style="padding:20px;color:red;font-size:14px">${data.error}</div>`; return; }
+    const avgRpeColor = parseFloat(data.avgRpe) >= 15 ? '#c0392b' : parseFloat(data.avgRpe) >= 12 ? '#e67e22' : '#27ae60';
     el.innerHTML = `
       <div class="stats-grid">
         <div class="stat-box"><div class="stat-label">RPE moyen</div><div class="stat-val" style="color:${avgRpeColor}">${data.avgRpe || '—'}</div></div>
@@ -361,16 +362,20 @@ async function loadResults() {
       <div class="card">
         <div class="card-header"><span class="card-title">Détail par athlète</span></div>
         ${data.responses.map(resp => {
-          const rpeColor = resp.rpe >= 17 ? 'av-red' : resp.rpe >= 13 ? 'av-orange' : 'av-green';
-          const initials = resp.userName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+          const name = resp.user_name || resp.userName || '?';
+          const durH = resp.duration_h || resp.durationH || '?';
+          const charge = parseFloat(resp.charge || 0).toFixed(1);
+          const rpe = parseInt(resp.rpe);
+          const rpeColor = rpe >= 17 ? 'av-red' : rpe >= 13 ? 'av-orange' : 'av-green';
+          const initials = name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
           return `<div class="athlete-row">
             <div class="av ${rpeColor}">${initials}</div>
             <div style="flex:1">
-              <div style="font-size:14px;font-weight:500">${resp.userName}</div>
-              <div style="font-size:12px;color:var(--text-2)">${resp.durationH}h · Charge : ${resp.charge.toFixed(1)} UA</div>
+              <div style="font-size:14px;font-weight:500">${name}</div>
+              <div style="font-size:12px;color:var(--text-2)">${durH}h · Charge : ${charge} UA</div>
               ${resp.comment ? `<div style="font-size:11px;color:var(--text-3);margin-top:2px">💬 ${resp.comment}</div>` : ''}
             </div>
-            <span class="badge ${resp.rpe >= 17 ? 'badge-red' : resp.rpe >= 13 ? 'badge-warn' : 'badge-green'}">RPE ${resp.rpe}</span>
+            <span class="badge ${rpe >= 17 ? 'badge-red' : rpe >= 13 ? 'badge-warn' : 'badge-green'}">RPE ${rpe}</span>
           </div>`;
         }).join('')}
         ${data.pending.map(p => {
@@ -382,7 +387,7 @@ async function loadResults() {
           </div>`;
         }).join('')}
       </div>`;
-  } catch(e) { el.innerHTML = '<div style="padding:20px;color:red;font-size:14px">Erreur de chargement</div>'; }
+  } catch(e) { el.innerHTML = `<div style="padding:20px;color:red;font-size:14px">Erreur: ${e.message}</div>`; }
 }
 
 // ── MAPPING & EXPORT ──────────────────────────────────────────────────────────
