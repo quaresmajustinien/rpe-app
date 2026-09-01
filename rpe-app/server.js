@@ -253,7 +253,7 @@ app.get('/api/excel-mapping', auth, adminOnly, async (req, res) => {
 
 // ─── EXPORT EXCEL ─────────────────────────────────────────────────────────────
 
-app.get('/api/export', auth, adminOnly, async (req, res) => {
+app.get('/api/export', (req, res, next) => { if (req.query.token) req.headers.authorization = 'Bearer ' + req.query.token; next(); }, auth, adminOnly, async (req, res) => {
   const mappingRes = await pool.query('SELECT * FROM excel_mapping WHERE id=1');
   const m = mappingRes.rows[0];
   if (!m || !m.duration_col) return res.status(400).json({ error: 'Mapping Excel non configuré' });
